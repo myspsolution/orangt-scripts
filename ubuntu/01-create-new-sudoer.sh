@@ -151,7 +151,7 @@ echo "${CREATE_USER} ALL=(ALL) NOPASSWD:ALL" | sudo tee "/etc/sudoers.d/${CREATE
 sudo chmod 0440 "/etc/sudoers.d/${CREATE_USER}"
 
 HOSTNAME=$(hostname)
-LOCAL_IP=$(hostname -I | awk "{print $NF}")
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 THE_DATE=$(date)
 
 printf "\n"
