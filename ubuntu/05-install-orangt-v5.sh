@@ -130,6 +130,10 @@ if [ -d "/var/www/html/${PROJECT_DOMAIN}.backend" ]; then
   exit
 fi
 
+clear
+
+echo ""
+
 # Prompt user for BACKEND_REPO
 while true; do
   printf "Enter ${BLD}BACKEND REPO${STD}, example: ${YLW}gitlab.com/user/repo.git${STD} : "
