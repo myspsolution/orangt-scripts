@@ -103,6 +103,10 @@ is_valid_domain() {
 
 # End of -------- Preliminary checking/validation ---------------
 
+clear
+
+echo ""
+
 # Prompt user for PROJECT_DOMAIN
 while true; do
   printf "Enter ${BLD}PROJECT DOMAIN${STD}, example: ${YLW}lms.example.com${STD} : "
@@ -129,10 +133,6 @@ if [ -d "/var/www/html/${PROJECT_DOMAIN}.backend" ]; then
   echo ""
   exit
 fi
-
-clear
-
-echo ""
 
 # Prompt user for BACKEND_REPO
 while true; do
