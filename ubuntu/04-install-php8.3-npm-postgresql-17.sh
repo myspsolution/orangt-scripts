@@ -1,5 +1,5 @@
 #!/bin/bash
-# 03-install-php8.3.sh
+# 04-install-php8.3-npm-postgresql-17.sh
 # prepared by dicky.dwijanto@myspsolution.com
 # last update: Nov 8th, 2024
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 02-install-spstool.sh
+# 03-install-spstool.sh
 # prepared by dicky.dwijanto@myspsolution.com
 # last update: Nov 8th, 2024
 
