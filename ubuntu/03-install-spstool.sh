@@ -1,7 +1,7 @@
 #!/bin/bash
 # 02-install-spstool.sh
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: Nov 7th, 2024
+# last update: Nov 8th, 2024
 
 CHECK_USER="orangt"
 
@@ -14,13 +14,13 @@ BLD='\033[1;97m'
 
 # --------------- Preliminary checking/validation ---------------
 
-if which spstool &> /dev/null; then
-  echo ""
-  echo -e "${BLD}spstool is already installed on this system.${STD}"
-  echo -e "spstool installation is canceled."
-  echo ""
-  exit
-fi
+#if which spstool &> /dev/null; then
+#  echo ""
+#  echo -e "${BLD}spstool is already installed on this system.${STD}"
+#  echo -e "spstool installation is canceled."
+#  echo ""
+#  exit
+#fi
 
 if [ "$USER" != "$CHECK_USER" ]; then
   echo ""
@@ -50,16 +50,6 @@ if [ $(echo $OS_INFO | egrep -c -i ubuntu) -eq 0 ]; then
   exit
 fi
 
-# check Ubuntu version, must be version 22.04 only
-#if [ $(lsb_release -sr | egrep -c -i "22.04") -eq 0 ]; then
-#  echo ""
-#  echo -e "This installation script must be run on ${BLD}Ubuntu 22.04 only${STD}."
-#  echo -e "Your detected OS: ${BLD}${OS_INFO}${STD}"
-#  echo -e "Installation is aborted."
-#  echo ""
-#  exit
-#fi
-
 # check whether user is root or superuser
 if [ $(id -u) -eq 0 ]; then
   echo ""
@@ -77,14 +67,6 @@ if [ "$NOT_SUDOER" -ne 0 ]; then
   echo -e "${BLD}user ${USER} is not a sudoer user.${STD}"
   echo -e "Please run this script as sudoer."
   echo -e "Please googling: ${BLD}create sudo user ubuntu linuxize${STD}"
-  echo ""
-  exit
-fi
-
-if [ -f "/home/${USER}/spstool/spstool.sh" ]; then
-  echo ""
-  echo -e "${BLD}spstool is already installed.${STD}"
-  echo -e "Installation is canceled"
   echo ""
   exit
 fi
@@ -110,16 +92,20 @@ fi
 
 cd ~
 
+if [ -d "/home/${CHECK_USER}/spstool" ]; then
+  sudo rm -rf "/home/${CHECK_USER}/spstool"
+fi
+
+sudo rm -f /etc/profile.d/spstool.sh
+
 git clone https://github.com/myspsolution/spstool.git spstool
 
-cd spstool
-
-sudo chmod +x sps*.*
-
-sudo ln -s "/home/${USER}/spstool/spstool.sh" /usr/local/bin/spstool
+sudo rm -f /usr/local/bin/spstool*
+sudo cp /home/${USER}/spstool/spstool* /usr/local/bin/
+sudo mv /usr/local/bin/spstool.sh /usr/local/bin/spstool
+sudo chmod +x /usr/local/bin/spstool*
 
 echo -e '#!/bin/bash\n/usr/local/bin/spstool sysinfo' | sudo tee /etc/profile.d/spstool.sh > /dev/null
-
 sudo chmod +x /etc/profile.d/spstool.sh
 
 spstool sysinfo
