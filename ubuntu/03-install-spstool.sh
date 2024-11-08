@@ -98,6 +98,8 @@ fi
 
 sudo rm -f /etc/profile.d/spstool.sh
 
+sudo rm -f /tmp/03-install-spstool.sh
+
 git clone https://github.com/myspsolution/spstool.git spstool
 
 sudo rm -f /usr/local/bin/spstool*
