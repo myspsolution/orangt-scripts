@@ -281,7 +281,7 @@ sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 sudo apt -y upgrade
 
-sudo apt -y install php8.3 php8.3-common php8.3-cli php8.3-fpm php8.3-curl php8.3-mysql php8.3-zip php8.3-mbstring php8.3-mcrypt php8.3-xml php8.3-pdo php8.3-bcmath php8.3-tokenizer php8.3-iconv php8.3-gd php8.3-dev php8.3-pgsql php-pear
+sudo apt -y install php8.3 php8.3-common php8.3-cli php8.3-fpm php8.3-curl php8.3-zip php8.3-mbstring php8.3-mcrypt php8.3-xml php8.3-pdo php8.3-bcmath php8.3-tokenizer php8.3-iconv php8.3-gd php8.3-dev php8.3-pgsql php-pear
 
 sudo apt update
 sudo apt -y upgrade
