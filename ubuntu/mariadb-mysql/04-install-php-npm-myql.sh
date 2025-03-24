@@ -277,9 +277,8 @@ echo "Installing PHP ${PHP_VERSION} and modules/dependencies..."
 sudo apt update
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
-sudo apt -y upgrade
-
-sudo apt -y install php${PHP_VERSION} php${PHP_VERSION}-common php${PHP_VERSION}-cli php${PHP_VERSION}-fpm php${PHP_VERSION}-curl php${PHP_VERSION}-mysql php${PHP_VERSION}-zip php${PHP_VERSION}-mbstring php${PHP_VERSION}-mcrypt php${PHP_VERSION}-xml php${PHP_VERSION}-pdo php${PHP_VERSION}-bcmath php${PHP_VERSION}-tokenizer php${PHP_VERSION}-iconv php${PHP_VERSION}-gd php${PHP_VERSION}-dev php-pear
+sudo apt -y ldap
+sudo apt -y install php${PHP_VERSION} php${PHP_VERSION}-common php${PHP_VERSION}-cli php${PHP_VERSION}-fpm php${PHP_VERSION}-curl php${PHP_VERSION}-mysql php${PHP_VERSION}-zip php${PHP_VERSION}-ldap php${PHP_VERSION}-mbstring php${PHP_VERSION}-mcrypt php${PHP_VERSION}-xml php${PHP_VERSION}-bcmath php${PHP_VERSION}-gd php${PHP_VERSION}-dev php-pear
 
 sudo apt update
 sudo apt -y upgrade
@@ -416,13 +415,11 @@ if ! which node > /dev/null 2>&1; then
   sudo apt update
   sudo apt upgrade -y
   cd ~
-  curl -fsSL "https://deb.nodesource.com/setup_${NODE)VERSION}.x" -o nodesource_setup.sh
+  curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" -o nodesource_setup.sh
   sudo -E bash nodesource_setup.sh
   sudo apt-get install -y nodejs
   rm ~/nodesource_setup.sh
 fi
-
-curl -fsSL -o "/home/$USER/robots.txt" https://cdn.bitzen19.com/script/robots.txt
 
 echo "Download and install laravel tools installation script..."
 sudo rm -f /tmp/install-laravel-tools.sh
@@ -431,6 +428,26 @@ sudo rm -f /tmp/install-laravel-tools.sh
 
 echo ""
 
+cd ~
+# Define the URL of the ZIP file
+HOME_ZIP_URL="https://github.com/myspsolution/orangt-templates/raw/refs/heads/main/home/orangt-home.zip"
+HOME_ZIP_FILE="orangt-home.zip"
+
+# Download the ZIP file using curl
+curl -fsSL -o "${HOME_ZIP_FILE}" "${HOME_ZIP_URL}"
+
+# Unzip the contents to the home directory
+unzip -o "${HOME_ZIP_FILE}"
+
+# Remove the downloaded ZIP file
+rm "${HOME_ZIP_FILE}"
+
+echo ""
+echo "Importing crontab"
+crontab crontab.txt
+rm crontab.txt
+
+echo ""
 echo "PHP and supported components installation is finished. Next, updated sysinfo will be displayed."
 echo "Press [ENTER] to continue"
 

@@ -1,7 +1,7 @@
 #!/bin/bash
-# 02-install-postgresql17-server.sh
+# 02-install-postgresql-server.sh
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: Nov 7th, 2024
+# last update: March 21th, 2025
 
 LINUX_DISTRO_CHECK="ubuntu"
 # LINUX_VERSION_CHECK="24.04"

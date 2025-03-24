@@ -394,6 +394,10 @@ sudo ufw reload
 printf "\n"
 sudo ufw status verbose
 
+export DB_USER=""
+export DB_PASSWORD_ROOT=""
+export DB_PASSWORD=""
+
 #printf "\n"
 printf "This database login info ${BLD}will be shown only once, so make sure you copy it${STD}.\n"
 printf "${YLW}PLEASE COPY AND PASTE TO TEXT FILE AND SAVE THE FOLLOWING:${STD}\n"

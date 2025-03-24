@@ -1,12 +1,12 @@
 #!/bin/bash
-# 04-install-php8.3-npm-postgresql-17.sh
+# 04-install-php-npm-postgresql
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: Nov 8th, 2024
+# last update: March 21st, 2025
 
 CHECK_USER="orangt"
 LINUX_DISTRO_CHECK="ubuntu"
 LINUX_VERSION_CHECK="24.04"
-PHP_VERSION="8.3"
+PHP_VERSION="8.4"
 PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
 PHP_FPM_COMMAND="php-fpm${PHP_VERSION}"
 NGINX_USER="www-data"
@@ -423,8 +423,6 @@ if ! which node > /dev/null 2>&1; then
   sudo apt-get install -y nodejs
   rm ~/nodesource_setup.sh
 fi
-
-curl -fsSL -o "/home/$USER/robots.txt" https://cdn.bitzen19.com/script/robots.txt
 
 echo "Download and install laravel tools installation script..."
 sudo rm -f /tmp/install-laravel-tools.sh
