@@ -1,7 +1,7 @@
 #!/bin/bash
 # 05-install-orangt-v5.sh
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: Nov 8th, 2024
+# last update: May 20th, 2024
 
 CHECK_USER="orangt"
 
@@ -14,7 +14,7 @@ STD='\033[0m'
 BLD='\033[1;97m'
 
 function msg_ok() {
-  printf "${BLU}\u2714${STD} $1\n"
+  printf "${BLU}\u2714${STD} $1${STD}\n"
 }
 
 function msg_error() {

@@ -1,7 +1,7 @@
 #!/bin/bash
 # 02-install-postgresql-server.sh
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: March 21th, 2025
+# last update: May 21th, 2025
 
 LINUX_DISTRO_CHECK="ubuntu"
 # LINUX_VERSION_CHECK="24.04"
@@ -59,7 +59,7 @@ if [ $(id -u) -eq 0 ]; then
 fi
 
 # check whether user is sudoer or not
-NOT_SUDOER=$(sudo -l -U $USER 2>&1 | egrep -c -i "not allowed to run sudo|unknown user")
+NOT_SUDOER=$(sudo -l -U ${USER} 2>&1 | egrep -c -i "not allowed to run sudo|unknown user")
 if [ "$NOT_SUDOER" -ne 0 ]; then
   echo ""
   echo -e "${BLD}user ${USER} is not a sudoer user.${STD}"
@@ -102,7 +102,7 @@ function valid_ip() {
 CLIENT_CODE="UNDEFINED"
 SERVER_ENVIRONMENT="UNDEFINED"
 ALLOW_REMOTE_IP="UNDEFINED"
-ENV_FILE="/home/$USER/server.env"
+ENV_FILE="/home/${USER}/server.env"
 TIMEZONES=("Asia/Jakarta" "Asia/Makassar" "Asia/Jayapura")
 CURRENT_TZ=$(timedatectl show -p Timezone --value)
 SELECTED_TZ="none"
@@ -153,16 +153,16 @@ while [[ "$CLIENT_CODE" == "UNDEFINED" ]]; do
   if [[ "$CODE_INPUT" =~ ^[a-z0-9]{3,12}$ ]]; then
     # Confirm the client code
     printf "You've entered client code: ${BLD}$CODE_INPUT${STD}\n"
-    read -p "Confirm? (y/n): " confirm
+    read -p "Confirm? (y/n): " CONFIRM
 
     # Check the confirmation input
-    while [[ ! "$confirm" =~ ^[yYnN]$ ]]; do
+    while [[ ! "${CONFIRM}" =~ ^[yYnN]$ ]]; do
       echo -e "Invalid input. Please enter ${BLD}y${STD} or ${BLD}n${STD}"
       printf "You've entered client code: ${BLD}$CODE_INPUT${STD}\n"
-      read -p "Confirm? (y/n): " confirm
+      read -p "Confirm? (y/n): " CONFIRM
     done
 
-    if [[ "$confirm" =~ ^[yY]$ ]]; then
+    if [[ "${CONFIRM}" =~ ^[yY]$ ]]; then
       CLIENT_CODE="$CODE_INPUT"
     else
       echo "Client code is not confirmed. Please try again."
@@ -177,8 +177,8 @@ echo ""
 echo -e "Client code is set to: ${BLD}${CLIENT_CODE}${STD}"
 
 # Check if the server.env file exists and source it
-if [[ -f "$ENV_FILE" ]]; then
-  source "$ENV_FILE"
+if [[ -f "${ENV_FILE}" ]]; then
+  source "${ENV_FILE}"
 fi
 
 if [[ "$SERVER_ENVIRONMENT" == "UNDEFINED" ]]; then
@@ -210,16 +210,16 @@ if [[ "$SERVER_ENVIRONMENT" == "UNDEFINED" ]]; then
 
   # Confirm the selection
   printf "You have selected this server environment is: ${YLW}${SELECTED_ENV}${STD}\n"
-  read -p "Confirm? (y/n): " confirm
+  read -p "Confirm? (y/n): " CONFIRM
 
   # Check the confirmation input
-  while [[ ! "$confirm" =~ ^[yYnN]$ ]]; do
+  while [[ ! "${CONFIRM}" =~ ^[yYnN]$ ]]; do
     echo -e "Invalid input. Please enter ${BLD}y${STD} or ${BLD}n${STD}"
     printf "You have selected this server environment is: ${YLW}${SELECTED_ENV}${STD}\n"
-    read -p "Confirm? (y/n): " confirm
+    read -p "Confirm? (y/n): " CONFIRM
   done
 
-  if [[ "$confirm" =~ ^[yY]$ ]]; then
+  if [[ "${CONFIRM}" =~ ^[yY]$ ]]; then
     # Update or create the server.env file with the selected environment
     echo "SERVER_ENVIRONMENT=${CLIENT_CODE}-${SELECTED_ENV}" > "${ENV_FILE}"
     source "${ENV_FILE}"
@@ -280,16 +280,16 @@ if [[ "$SERVER_ENVIRONMENT" == *database* ]]; then
     if valid_ip "${IP_INPUT}" && [[ "${IP_FIRST_SEGMENT}" == "${LOCAL_IP_FIRST_SEGMENT}" ]] && [[ "${IP_INPUT}" != "${LOCAL_IP}" ]]; then
       # Confirm the IP address
       printf "You've entered remote web application IP address: ${BLD}${IP_INPUT}${STD}\n"
-      read -p "Confirm? (y/n): " confirm
+      read -p "Confirm? (y/n): " CONFIRM
 
       # Check the confirmation input
-      while [[ ! "$confirm" =~ ^[yYnN]$ ]]; do
+      while [[ ! "${CONFIRM}" =~ ^[yYnN]$ ]]; do
         printf "Invalid input. Please enter ${BLD}y${STD} or ${BLD}n${STD}.\n"
         printf "You've entered remote web application IP address: ${BLD}$IP_INPUT${STD}\n"
-        read -p "Confirm? (y/n): " confirm
+        read -p "Confirm? (y/n): " CONFIRM
       done
 
-      if [[ "$confirm" =~ ^[yY]$ ]]; then
+      if [[ "${CONFIRM}" =~ ^[yY]$ ]]; then
         ALLOW_REMOTE_IP="${IP_INPUT}"
       else
         printf "Web application IP address is not confirmed. Please try again.\n"
@@ -417,6 +417,8 @@ sudo systemctl enable postgresql
 sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'en_US.UTF-8';"
 sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+# Give privileges on public schema (so user can create tables etc.)
+sudo -u postgres psql -d "${DB_NAME}" -c "GRANT ALL ON SCHEMA public TO ${DB_USER};"
 sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '${DB_PASSWORD_PROGRESS}';"
 
 sudo systemctl stop postgresql
@@ -485,9 +487,9 @@ printf "**********************************************************************\n
 printf "${STD}\n"
 printf "Make sure you have copied information above.\n"
 read -p "Press [ENTER] when you're ready to continue ..." key
-confirm="x"
-while [[ ! "$confirm" =~ ^[yY]$ ]]; do
+CONFIRM="x"
+while [[ ! "${CONFIRM}" =~ ^[yY]$ ]]; do
   printf "Make sure ${BLD}you have copied information above${STD}.\n"
-  read -p "Confirm? (y/n): " confirm
+  read -p "Confirm? (y/n): " CONFIRM
 done
 clear

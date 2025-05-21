@@ -1,12 +1,13 @@
 #!/bin/bash
 # 04-install-php-npm-postgresql
 # prepared by dicky.dwijanto@myspsolution.com
-# last update: March 21st, 2025
+# last update: My 20th, 2025
 
-CHECK_USER="orangt"
 LINUX_DISTRO_CHECK="ubuntu"
 LINUX_VERSION_CHECK="24.04"
 PHP_VERSION="8.4"
+NODE_VERSION="22"
+PGSQL_VERSION="17"
 PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
 PHP_FPM_COMMAND="php-fpm${PHP_VERSION}"
 NGINX_USER="www-data"
@@ -18,11 +19,42 @@ YLW='\033[1;33m'
 STD='\033[0m'
 BLD='\033[1;97m'
 
+CONFIG_FILE="/etc/orangt.conf"
+
+if [ -f "$CONFIG_FILE" ]; then
+  while IFS='=' read -r key value; do
+    # Skip empty lines and lines starting with #
+    [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
+
+    # Remove leading/trailing spaces from key and value
+    key="$(echo "$key" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    value="$(echo "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+    # Export variable (optional: remove quotes if you want)
+    export "$key"="$value"
+  done < "$CONFIG_FILE"
+fi
+
+if [ -z "${ORANGT_USER}" ]; then
+  # default ORANGT_USER
+  ORANGT_USER="orangt"
+fi
+
+if [ -z "${ORANGT_DIR}" ]; then
+  # default ORANGT_DIR
+  ORANGT_DIR="/var/www/html"
+fi
+
+if [ -z "${ORANGT_NGINX_LOG_DIR}" ]; then
+  # default ORANGT_NGINX_LOG_DIR
+  ORANGT_NGINX_LOG_DIR="/var/log/nginx"
+fi
+
 # --------------- Preliminary checking/validation ---------------
 
-if [ "$USER" != "$CHECK_USER" ]; then
+if [ "${USER}" != "${ORANGT_USER}" ]; then
   echo ""
-  echo -e "Please run this installation script as user: ${BLD}${CHECK_USER}${STD}"
+  echo -e "Please run this installation script as user: ${BLD}${ORANGT_USER}${STD}"
   echo ""
   exit
 fi
@@ -76,7 +108,7 @@ if [ $(id -u) -eq 0 ]; then
 fi
 
 # check whether user is sudoer or not
-NOT_SUDOER=$(sudo -l -U $USER 2>&1 | egrep -c -i "not allowed to run sudo|unknown user")
+NOT_SUDOER=$(sudo -l -U ${USER} 2>&1 | egrep -c -i "not allowed to run sudo|unknown user")
 if [ "$NOT_SUDOER" -ne 0 ]; then
   echo ""
   echo -e "${BLD}user ${USER} is not a sudoer user.${STD}"
@@ -163,7 +195,7 @@ replace_file_with_url() {
 # Starting specific installation script
 
 # everything started from current user home
-echo "Everything started from current user home: $USER home"
+echo "Everything started from current user home: ${USER} home"
 cd ~
 
 echo "Standard Ubuntu repositories update:"
@@ -177,7 +209,7 @@ sudo apt -y upgrade
 # install common linux tools
 echo "Installing required packages..."
 
-REQUIRED=(nano curl wget zip unzip git ufw nginx acl logrotate openssl python3 lsb-release gnupg2 ca-certificates apt-transport-https software-properties-common fail2ban tmpreaper finger poppler-utils pdftk)
+REQUIRED=(nano curl wget zip unzip git ufw nginx acl logrotate openssl python3 lsb-release gnupg2 ca-certificates apt-transport-https software-properties-common fail2ban tmpreaper finger poppler-utils pdftk certbot python3-certbot-nginx)
 MISSING=()
 
 # Check for missing commands
@@ -197,12 +229,12 @@ fi
 if ! which psql > /dev/null 2>&1; then
   # from: https://www.postgresql.org/download/linux/ubuntu/
   echo ""
-  echo "Installing postgresql-client-17-client..."
+  echo "Installing postgresql-client-${PGSQL_VERSION}-client..."
   sudo install -d /usr/share/postgresql-common/pgdg
   sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
   sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
   sudo apt update
-  sudo apt -y install postgresql-client-17
+  sudo apt -y install "postgresql-client-${PGSQL_VERSION}"
   echo ""
 fi
 
@@ -213,21 +245,22 @@ sudo git clone https://github.com/myspsolution/nginx-custom-snippets.git /etc/ng
 
 FILE_NGINX_CONF=/etc/nginx/nginx.conf
 
-if [ ! -f "$FILE_NGINX_CONF" ]; then
+if [ ! -f "${FILE_NGINX_CONF}" ]; then
+  echo ""
   echo -e "Can not find nginx.conf file:"
-  echo -e "${BLD}$FILE_NGINX_CONF${STD}"
+  echo -e "${BLD}${FILE_NGINX_CONF}${STD}"
   echo ""
   exit
 fi
 
-#echo "Find nginx user from file: $FILE_NGINX_CONF"
-#if [ $(grep "\s*user\s\+[^\s]\+;$" "$FILE_NGINX_CONF" -m1 -c) -ne 1 ]; then
+#echo "Find nginx user from file: ${FILE_NGINX_CONF}"
+#if [ $(grep "\s*user\s\+[^\s]\+;$" "${FILE_NGINX_CONF}" -m1 -c) -ne 1 ]; then
 #  echo -e "Can not determine nginx user from file: ${BLD}${FILE_NGINX_CONF}${STD}"
 #  echo ""
 #  exit
 #fi
 
-#NGINX_USER=$(grep "\s*user\s\+[^\s]\+;$" "$FILE_NGINX_CONF" -m1 | awk -F'[ ]' '{print $NF}' | sed 's/;//')
+#NGINX_USER=$(grep "\s*user\s\+[^\s]\+;$" "${FILE_NGINX_CONF}" -m1 | awk -F'[ ]' '{print $NF}' | sed 's/;//')
 #echo -e "nginx user: ${BLD}${NGINX_USER}${STD}"
 
 sudo systemctl stop ufw
@@ -281,7 +314,9 @@ sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 sudo apt -y upgrade
 
-sudo apt -y install php8.3 php8.3-common php8.3-cli php8.3-fpm php8.3-curl php8.3-zip php8.3-mbstring php8.3-mcrypt php8.3-xml php8.3-pdo php8.3-bcmath php8.3-tokenizer php8.3-iconv php8.3-gd php8.3-dev php8.3-pgsql php-pear
+#sudo apt -y install php8.3 php8.3-common php8.3-cli php8.3-fpm php8.3-curl php8.3-zip php8.3-mbstring php8.3-mcrypt php8.3-xml php8.3-pdo php8.3-bcmath php8.3-tokenizer php8.3-iconv php8.3-gd php8.3-dev php8.3-pgsql php-pear
+
+sudo apt -y install "php${PHP_VERSION}" "php${PHP_VERSION}-*" php-pear
 
 sudo apt update
 sudo apt -y upgrade
@@ -348,14 +383,14 @@ while read filename
 replace_and_backup_file_with_url "${FILE_NGINX_CONF}" "${REPLACE_FILE_NGINX_CONF}"
 
 # We must connect things up so that NGINX (webserver) user can read files that belong to the website user’s group.\:
-echo "Add $USER to $NGINX_USER group..."
+echo "Add ${USER} to ${NGINX_USER} group..."
 
-sudo usermod -aG "$USER" "$NGINX_USER"
+sudo usermod -aG "${USER}" "${NGINX_USER}"
 
 # set app folder to current sudo user
-echo "Change owner/group of /var/www/html to current user: $USER"
+echo "Change owner/group of /var/www/html to current user: ${USER}"
 
-sudo chown "$USER:$USER" /var/www/html
+sudo chown "${USER}:${USER}" /var/www/html
 
 # make nginx virtual hosts
 echo "Enable nginx virtual hosts:"
@@ -364,23 +399,20 @@ sudo rm -f /etc/nginx/sites-available/*
 sudo mkdir -p /etc/nginx/sites-enabled
 sudo rm -f /etc/nginx/sites-enabled/*
 
-sudo rm -f /etc/nginx/sites-enabled/*
-
 echo "Create file: /etc/ssl/dhparams-2048.pem for nginx ssl_dhparam"
 echo "It takes a while, please wait..."
 sudo openssl dhparam -out /etc/ssl/dhparams-2048.pem 2048
 
 # set proper permission for nginx folder log
 echo "Set proper permissions for nginx folder log: /var/log/nginx"
-
-sudo setfacl -R -m "u:$USER:rX" /var/log/nginx
+sudo setfacl -R -m "u:${USER}:rX" /var/log/nginx
 
 echo "Install supervisor service..."
 sudo apt -y install supervisor
 sudo systemctl start supervisor
 sudo systemctl enable supervisor
 
-sudo setfacl -R -m "u:$USER:rX" /var/log/supervisor
+sudo setfacl -R -m "u:${USER}:rX" /var/log/supervisor
 
 # testing
 echo "Test php-fpm and nginx configuration before restarting services:"
@@ -418,7 +450,7 @@ if ! which node > /dev/null 2>&1; then
   sudo apt update
   sudo apt upgrade -y
   cd ~
-  curl -fsSL https://deb.nodesource.com/setup_22.x -o nodesource_setup.sh
+  curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" -o nodesource_setup.sh
   sudo -E bash nodesource_setup.sh
   sudo apt-get install -y nodejs
   rm ~/nodesource_setup.sh
