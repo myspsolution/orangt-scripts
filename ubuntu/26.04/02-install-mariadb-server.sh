@@ -2,10 +2,10 @@
 
 # 02-install-mariadb-server-ubuntu-26.04-v7.sh
 # Interactive MariaDB installer for Ubuntu Server 26.04 LTS (Resolute).
-# Revised: 2026-09-09 22-21-30
+# Revised: 2026-10-28 13-59-23
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 02-install-mariadb-server-ubuntu-26.04-v7.sh
-# Privileged commands run directly as root or through authorized sudo.
+# Privileged commands run directly as root or through noninteractive sudo.
 
 if [ -z "${BASH_VERSION:-}" ]; then
   printf '%s\n' 'Error: run this script with bash, not another shell.' >&2
@@ -157,12 +157,8 @@ configure_privilege() {
   SUDO_BIN=$(type -P sudo || true)
   [[ -n "$SUDO_BIN" ]] || fatal 'This installer requires root access or an authorized sudo account. Run: bash 02-install-mariadb-server-ubuntu-26.04-v7.sh'
 
-  if [[ -t 0 && -t 2 ]]; then
-    "$SUDO_BIN" -v || fatal 'Sudo authentication was cancelled or failed. No changes were made.'
-  else
-    SUDO_OPTIONS=(-n)
-    "$SUDO_BIN" -n -v 2>/dev/null || fatal 'Noninteractive sudo authentication is unavailable. No changes were made.'
-  fi
+  # Never request a sudo password; individual commands must already be authorized.
+  SUDO_OPTIONS=(-n)
 
 }
 
@@ -171,11 +167,11 @@ require_sudo_command() {
   local command_path
   shift
 
-  (( EUID != 0 )) || return
+  (( EUID != 0 )) || return 0
   command_path=$(type -P "$command_name" || true)
   [[ -n "$command_path" ]] || fatal "Required command is unavailable: ${command_name}"
   "$SUDO_BIN" "${SUDO_OPTIONS[@]}" -l -- "$command_path" "$@" >/dev/null 2>&1 || \
-    fatal "Sudo is not authorized for the required command: ${command_path} $*"
+    fatal "Sudo cannot run the required command without a password: ${command_path} $*. Use an already-authorized root session or arrange noninteractive authorization."
 }
 
 preflight_privileged_commands() {
@@ -234,7 +230,7 @@ preflight_installation() {
 }
 
 # Route command-level elevation through the selected mode. Existing -n flags
-# are normalized so interactive callers can authenticate again if necessary.
+# are normalized while preserving noninteractive execution for sudo callers.
 sudo() {
   local -a arguments=("$@")
   local target_user
