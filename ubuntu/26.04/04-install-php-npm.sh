@@ -2,10 +2,10 @@
 
 # 04-install-php-npm-postgresql-ufw-ipv4-swap-v4.sh
 # Install PHP, Node.js, database clients, and supporting web-server tools.
-# Revised: 2026-10-28 13-38-02
+# Revised: 2026-10-28 14-32-24
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 04-install-php-npm-postgresql-ufw-ipv4-swap-v4.sh
-# Privileged commands run directly as root or through authorized sudo.
+# Privileged commands run directly as root or through noninteractive sudo.
 # APT retries and HTTPS mirror fallback; IPv4 UFW ports 22, 80, and 443.
 # Create and persist a 4 GB /swapfile only when needed.
 
@@ -193,19 +193,8 @@ configure_privilege() {
     exit 1
   }
 
-  if [[ -t 0 && -t 2 ]]; then
-    if ! "$sudo_bin" -v; then
-      error 'Sudo authentication was cancelled or failed. No changes were made.'
-      exit 1
-    fi
-    SUDO=("$sudo_bin")
-  else
-    if ! "$sudo_bin" -n -v 2>/dev/null; then
-      error 'Noninteractive sudo authentication is unavailable. No changes were made.'
-      exit 1
-    fi
-    SUDO=("$sudo_bin" -n)
-  fi
+  # Never request a sudo password; required commands must already be authorized.
+  SUDO=("$sudo_bin" -n)
 
 }
 
@@ -214,14 +203,14 @@ require_sudo_command() {
   local command_path
   shift
 
-  (( EUID != 0 )) || return
+  (( EUID != 0 )) || return 0
   command_path=$(type -P "$command_name" || true)
   [[ -n "$command_path" ]] || {
     error "Required command is unavailable: ${command_name}"
     exit 1
   }
   if ! "${SUDO[@]}" -l -- "$command_path" "$@" >/dev/null 2>&1; then
-    error "Sudo is not authorized for the required command: ${command_path} $*"
+    error "Sudo cannot run the required command without a password: ${command_path} $*. Use an authorized root session or arrange noninteractive sudo authorization."
     exit 1
   fi
 }
