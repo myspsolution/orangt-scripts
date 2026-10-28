@@ -2,7 +2,7 @@
 
 # 03-install-spstool.sh
 # Install spstool and its dependencies for the configured sudo user.
-# Revised: 2026-09-09 22-21-30
+# Revised: 2026-10-28 14-08-41
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 03-install-spstool.sh
 
@@ -106,18 +106,8 @@ configure_privilege() {
     exit 1
   }
 
-  if [[ -t 0 && -t 2 ]]; then
-    if ! "$SUDO_BIN" -v; then
-      error 'Sudo authentication was cancelled or failed. No changes were made.'
-      exit 1
-    fi
-  else
-    SUDO_OPTIONS=(-n)
-    if ! "$SUDO_BIN" -n -v 2>/dev/null; then
-      error 'Noninteractive sudo authentication is unavailable. No changes were made.'
-      exit 1
-    fi
-  fi
+  # Never request a sudo password; required commands must already be authorized.
+  SUDO_OPTIONS=(-n)
 
 }
 
@@ -127,7 +117,7 @@ require_sudo_command() {
   fi
 
   if ! "$SUDO_BIN" "${SUDO_OPTIONS[@]}" -l -- "$@" >/dev/null 2>&1; then
-    error "Sudo is not authorized for the required command: $*"
+    error "Sudo cannot run the required command without a password: $*. Use an authorized root session or arrange noninteractive sudo authorization."
     exit 1
   fi
 }
@@ -154,7 +144,7 @@ preflight_privileged_commands() {
 }
 
 preflight_package_bootstrap() {
-  [[ ${#MISSING[@]} -gt 0 ]] || return
+  [[ ${#MISSING[@]} -gt 0 ]] || return 0
 
   require_sudo_command env DEBIAN_FRONTEND=noninteractive apt-get \
     -o Acquire::Retries=3 \
