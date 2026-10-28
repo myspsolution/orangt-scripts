@@ -2,7 +2,7 @@
 
 # 04-install-php-npm-postgresql-ufw-ipv4-swap-v4.sh
 # Install PHP, Node.js, database clients, and supporting web-server tools.
-# Revised: 2026-10-28 10-28-26
+# Revised: 2026-10-28 13-38-02
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 04-install-php-npm-postgresql-ufw-ipv4-swap-v4.sh
 # Privileged commands run directly as root or through authorized sudo.
@@ -42,6 +42,7 @@ readonly PHP_FPM_INI="/etc/php/${PHP_VERSION}/fpm/php.ini"
 readonly PHP_FPM_WWW_CONF="/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf"
 readonly FILE_NGINX_CONF="/etc/nginx/nginx.conf"
 readonly URL_BASE="https://raw.githubusercontent.com/myspsolution/orangt-templates/refs/heads/main"
+readonly HOME_FILE="${URL_BASE}/home/orangt-home.zip"
 readonly REPLACE_FILE_PHP_FPM_WWW_CONF="${URL_BASE}/php/www.${PHP_VERSION}.conf"
 readonly REPLACE_FILE_PHP_INI="${URL_BASE}/php/php.${PHP_VERSION}.ini"
 readonly REPLACE_FILE_NGINX_CONF="${URL_BASE}/nginx/nginx.conf"
@@ -323,7 +324,8 @@ stage_remote_resources() {
     "$REPLACE_FILE_LOG_ROTATE_SUPERVISOR" \
     'https://composer.github.io/installer.sig' \
     'https://getcomposer.org/installer' \
-    "$LARAVEL_TOOL_SCRIPT"; do
+    "$LARAVEL_TOOL_SCRIPT" \
+    "$HOME_FILE"; do
     download_to_stage "$url"
   done
 
@@ -1029,6 +1031,28 @@ info "Downloading and installing Laravel tools..."
 LARAVEL_TOOL_TEMP="${STAGED_RESOURCES[$LARAVEL_TOOL_SCRIPT]}"
 bash -n "$LARAVEL_TOOL_TEMP"
 bash "$LARAVEL_TOOL_TEMP"
+
+# ---------------- Application user home files ----------------
+
+HOME_DESTINATION="/home/${ORANGT_USER}"
+HOME_ARCHIVE="${STAGED_RESOURCES[$HOME_FILE]}"
+if ! unzip -t "$HOME_ARCHIVE" >/dev/null; then
+  error "Cannot validate home archive: ${HOME_FILE%%\?*}"
+  exit 1
+fi
+if [[ ! -d "$HOME_DESTINATION" ]]; then
+  error "Application user home directory does not exist: ${HOME_DESTINATION}"
+  exit 1
+fi
+
+info "Installing home files in ${HOME_DESTINATION}..."
+if (( EUID == 0 )); then
+  # Staged downloads are private to root by default; grant the target user access.
+  chmod 644 "$HOME_ARCHIVE"
+  runuser -u "$ORANGT_USER" -- unzip -o "$HOME_ARCHIVE" -d "$HOME_DESTINATION"
+else
+  unzip -o "$HOME_ARCHIVE" -d "$HOME_DESTINATION"
+fi
 
 # ---------------- Final verification ----------------
 
