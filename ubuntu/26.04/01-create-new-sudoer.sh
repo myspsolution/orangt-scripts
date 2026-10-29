@@ -2,7 +2,7 @@
 
 # 01-create-new-sudoer.sh
 # Create a sudo-enabled Linux user and an SSH keypair.
-# Revised: 2026-09-09 22-21-30
+# Revised: 2026-10-29 09-31-07
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 01-create-new-sudoer.sh
 
@@ -249,7 +249,6 @@ confirm_yes_no() {
 
 # ---------------- Starting script ----------------
 
-USER="$(id -un)"
 OS_INFO=$(awk -F= '$1 == "PRETTY_NAME" {sub(/^[^=]*=/, ""); gsub(/^"|"$/, ""); print}' /etc/os-release)
 
 # ---------------- Preliminary validation ----------------
@@ -372,10 +371,16 @@ sudo rm -f "/home/${CREATE_USER}/.ssh/${CREATE_USER}_private_key_temp.pub"
 printf '\nlast update        : %s\n\n' "$THE_DATE"
 printf '%s\n' '**********************************************************************'
 warn 'Make sure you have copied the information above.'
-printf 'Next, you will be logged out. Log in again as %s using the keypair above.\n' "$CREATE_USER" >&2
-read_input 'Press [Enter] when you are ready to log out:' REPLY || exit 1
-if [[ "$USER" == 'root' ]]; then
-  warn 'The root account will not be terminated automatically. Log out manually.'
-  exit 0
+warn "A login shell for ${CREATE_USER} will start in this terminal. Type exit to return to your original session."
+read_input 'Press [Enter] when you are ready to switch users:' REPLY || exit 1
+if (( EUID == 0 )); then
+  if ! command runuser -l "$CREATE_USER"; then
+    error "Could not start a login shell for ${CREATE_USER}. Your original session remains open."
+    exit 1
+  fi
+else
+  if ! "$SUDO_BIN" -i -u "$CREATE_USER"; then
+    error "Could not start a login shell for ${CREATE_USER}. Your original session remains open."
+    exit 1
+  fi
 fi
-pkill -KILL -u "$USER"
