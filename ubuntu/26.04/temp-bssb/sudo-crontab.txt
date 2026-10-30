@@ -1,3 +1,0 @@
-30 1 * * * /usr/sbin/runuser -l orangt -c '/usr/bin/bash /home/orangt/clear-log.sh'
-12 2 * * * /usr/sbin/runuser -l orangt -c '/usr/bin/bash /home/orangt/update.sh --restart'
-15 3 * * * /usr/sbin/runuser -l orangt -c '/usr/bin/bash /home/orangt/maintenance.sh'

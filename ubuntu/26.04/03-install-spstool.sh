@@ -2,7 +2,7 @@
 
 # 03-install-spstool.sh
 # Install spstool and its dependencies for the configured sudo user.
-# Revised: 2026-10-28 14-08-41
+# Revised: 2026-10-30 11-32-56
 # prepared by dicky.dwijanto@myspsolution.com
 # Usage: bash 03-install-spstool.sh
 
@@ -25,7 +25,7 @@ readonly BLD="\033[1;97m"
 
 readonly CONFIG_FILE="/etc/orangt.conf"
 readonly SPSTOOL_REPOSITORY="https://github.com/myspsolution/spstool.git"
-readonly REQUIRED=(curl git ncat)
+readonly REQUIRED=(bc curl git ncat)
 
 MISSING=()
 OS_INFO=""
